@@ -1,0 +1,76 @@
+import java.util.*;
+import java.io.*;
+
+
+/**
+ * Opens the folder, makes PDF objects, and organizes them with an array.
+ * 
+ * @author Vania Xu
+ * @version 1.0 06/05/2013
+ */
+
+public class PDFRenameDriver {
+
+  /**
+	 * @param args
+	 */
+	public static void main(String[] args) {
+		String directoryPath = "C:\\Users\\vaniax\\Desktop\\9 Series Please Rename Me\\900007-8";
+		ArrayList<Long> invoiceNumbers = new ArrayList<Long>(); 
+		
+		// creates a folder within the current folder
+		File correctPDFs = new File(directoryPath + "\\Correct PDF Names");
+		if (correctPDFs.mkdir()) { // makes the directory, returns boolean
+			System.out.println("Directory is created");
+		} else {
+			System.out.println("Failed to create directory");
+			// if directory is not made, the program stops
+			System.exit(0);
+		}
+		// creates an ArrayList that will hold the PDFs found in the folder
+		ArrayList<PDF> PDFs = new ArrayList<PDF>();
+		File dir = new File(directoryPath); // opens the file that holds all the
+											// PDFs
+		
+		// If the file is a folder (or directory)
+		if (dir.isDirectory()) {
+			// puts all the files in an array
+			File[] listFiles = dir.listFiles();
+			// Goes through the above array and creates PDF objects and adds to
+			// the ArrayList
+			for (File file : listFiles) {
+				if (file.isFile()){
+					PDFs.add(new PDF(file));
+				}
+			}
+		}
+
+		// For each object in the Array List
+		for (int i = 0; i < PDFs.size(); i++) {
+			// a variable for the current PDF looked at
+			PDF current = PDFs.get(i);
+			try {
+				// method that extracts data from PDF into a string
+				current.PDFtoString();
+			} catch (IOException e) { // exception, in case that doesn't work.
+				e.printStackTrace();
+			}
+			// Creates the new pathname with the correct name
+			Long invoiceNumber = current.invoiceNumber(); 
+			invoiceNumbers.add(invoiceNumber);
+			String newName = correctPDFs + "\\" + current.invoiceNumber()
+					+ ".pdf";
+			current.renamePDF(newName); // Calls the method that renames the PDF
+
+		}
+		Collections.sort(invoiceNumbers); //sorts the array list
+		//Creates an ExcelWriter object
+		ExcelWriter invoiceNumberExcel = 
+				new ExcelWriter(invoiceNumbers, correctPDFs.toString()); 
+		invoiceNumberExcel.writeColumns(); //writes the left column
+		invoiceNumberExcel.writeRightColumn(); //writes the right column
+		invoiceNumberExcel.writeExcel(); //writes everything onto an excel file
+
+	}
+
+}
